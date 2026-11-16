@@ -1,0 +1,57 @@
+# ── How to build/install this project ─────────────────────────────
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+# ── Project identity + core dependencies ──────────────────────────
+[project]
+name = "claim-severity"
+version = "0.1.0"
+description = "Predict claim severity and prolonged settlement risk for commercial insurance claims."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Collins Njagi" }]
+dependencies = [
+    "numpy>=1.26,<3",
+    "pandas>=2.2,<3",
+    "pyarrow>=16",            # fast Parquet read/write
+    "scikit-learn>=1.5,<2",
+    "nltk>=3.9,<4",
+    "matplotlib>=3.8,<4",
+    "faker>=25",              # realistic fake names, addresses, dates
+    "pyyaml>=6.0,<7",         # read config files
+]
+
+# ── Optional groups: install only what each environment needs ─────
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-cov>=5",
+    "ruff>=0.6",
+    "pre-commit>=3.7",
+]
+notebook = ["jupyterlab>=4,<5"]
+spark = ["pyspark>=3.5,<5"]
+app = ["streamlit>=1.36,<2"]
+
+# ── Tell setuptools our code lives in src/ ────────────────────────
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# ── Ruff: linter + formatter settings ─────────────────────────────
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# E/W: style errors · F: real bugs (unused vars, undefined names)
+# I: import order · B: common bug patterns · UP: modern Python syntax
+# N: naming conventions · SIM: simplifications
+select = ["E", "W", "F", "I", "B", "UP", "N", "SIM"]
+
+# ── Pytest settings ───────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"   # show a short summary of skipped/failed tests

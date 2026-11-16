@@ -1,0 +1,38 @@
+# ── Virtual environment ──
+.venv/
+
+# ── Python cache / build files ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# ── Data & model artifacts (generated, can be large) ──
+data/
+models/
+*.db
+*.sqlite
+
+# ── Secrets: never commit ──
+.env
+*.pem
+*.key
+
+# ── Tools ──
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# ── Spark local files ──
+spark-warehouse/
+metastore_db/
+derby.log
+
+# ── Editor / OS ──
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
