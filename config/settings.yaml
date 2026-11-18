@@ -1,0 +1,26 @@
+# ── Project settings: the single control panel for the pipeline ──
+# Paths are relative to the project root.
+# Never put secrets here (this file is committed). Secrets go in .env.
+
+project:
+  name: claim-severity
+  random_seed: 42            # same seed → same synthetic data every run
+
+paths:
+  raw_data: data/raw              # untouched output of data generation
+  processed_data: data/processed  # cleaned, model-ready data
+  database: data/claims.db        # SQLite file, standing in for DB2
+  documents: data/documents       # adjuster notes, standing in for FileNet
+  models: models                  # trained model files
+  reports: reports                # charts and summaries
+
+data_generation:
+  n_claims: 50000
+  start_date: "2020-01-01"
+  end_date: "2025-12-31"
+  # Share of claims per product line (must add up to 1.0)
+  product_line_mix:
+    commercial_auto: 0.35
+    general_liability: 0.25
+    workers_compensation: 0.25
+    commercial_property: 0.15

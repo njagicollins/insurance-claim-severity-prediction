@@ -60,6 +60,7 @@ This project mirrors an enterprise claims-analytics stack using open, locally ru
 | Data | Synthetic, seeded (~50,000 claims, configurable) | No privacy risk. Fully reproducible |
 | CI/CD | GitHub Actions | Native to GitHub, no server to maintain, free for public repos |
 | Code layout | Logic in an installable `src/` package. Notebooks only for exploration | Testable, reusable, importable by the dashboard and CI |
+| Configuration | One YAML file (`config/settings.yaml`) loaded into frozen, typed dataclasses and validated at startup | No magic numbers in code. Bad settings fail fast with a clear error. `CLAIM_SEVERITY_CONFIG` lets CI swap in a small, fast config. `safe_load` only, so a config file can never run code |
 
 ## 5. Repository layout
 
