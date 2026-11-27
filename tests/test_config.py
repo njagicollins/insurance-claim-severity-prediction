@@ -63,6 +63,11 @@ def test_env_var_chooses_the_settings_file(tmp_path, valid_raw, monkeypatch):
     monkeypatch.setenv(CONFIG_ENV_VAR, str(write_yaml(tmp_path, valid_raw)))
     assert load_settings().data_generation.n_claims == 1000
 
+def test_targets_are_loaded():
+    targets = load_settings().targets
+    assert targets.severity_thresholds.medium < targets.severity_thresholds.high
+    assert targets.prolonged_settlement_days > 0
+
 
 # ── Sad path: bad settings are rejected with a clear message ──────
 @pytest.mark.parametrize(
@@ -70,6 +75,9 @@ def test_env_var_chooses_the_settings_file(tmp_path, valid_raw, monkeypatch):
     [
         ("data_generation", "n_claims", 0, "n_claims must be positive"),
         ("data_generation", "n_claims", "lots", "invalid setting"),
+        ("data_generation", "n_policies", 0, "n_policies must be positive"),
+        ("targets", "prolonged_settlement_days", 0, "prolonged_settlement_days must be positive"),
+        ("targets", "prolonged_settlement_days", "a year", "invalid setting"),
         ("data_generation", "start_date", "2030-01-01", "must be before end_date"),
         ("data_generation", "end_date", "31/12/2025", "invalid setting"),
         ("project", "random_seed", "abc", "invalid setting"),
@@ -93,6 +101,25 @@ def test_mix_cannot_be_negative(tmp_path, valid_raw):
     with pytest.raises(ConfigError, match="cannot be negative"):
         load_settings(write_yaml(tmp_path, valid_raw))
 
+
+@pytest.mark.parametrize(
+    ("medium", "high"),
+    [
+        (100000, 10000),  # wrong order
+        (10000, 10000),   # equal: the Medium band would be empty
+        (0, 100000),      # a $0 cut point makes no sense
+    ],
+)
+def test_severity_thresholds_must_be_in_order(tmp_path, valid_raw, medium, high):
+    valid_raw["targets"]["severity_thresholds"] = {"medium": medium, "high": high}
+    with pytest.raises(ConfigError, match="0 < medium < high"):
+        load_settings(write_yaml(tmp_path, valid_raw))
+
+
+def test_missing_targets_section_is_named(tmp_path, valid_raw):
+    del valid_raw["targets"]
+    with pytest.raises(ConfigError, match="missing setting 'targets'"):
+        load_settings(write_yaml(tmp_path, valid_raw))
 
 def test_missing_setting_is_named(tmp_path, valid_raw):
     del valid_raw["data_generation"]["n_claims"]

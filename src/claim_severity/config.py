@@ -40,9 +40,21 @@ class Paths:
 @dataclass(frozen=True)
 class DataGeneration:
     n_claims: int
+    n_policies: int
     start_date: date
     end_date: date
     product_line_mix: dict[str, float]
+
+@dataclass(frozen=True)
+class SeverityThresholds:
+    medium: float  # cost at or above this is Medium (below is Low)
+    high: float    # cost at or above this is High
+
+
+@dataclass(frozen=True)
+class Targets:
+    severity_thresholds: SeverityThresholds
+    prolonged_settlement_days: int
 
 
 @dataclass(frozen=True)
@@ -51,6 +63,7 @@ class Settings:
     random_seed: int
     paths: Paths
     data_generation: DataGeneration
+    targets: Targets
 
 
 # ── Public entry point ────────────────────────────────────────────
@@ -103,6 +116,8 @@ def _build_settings(raw: dict[str, Any]) -> Settings:
     project = raw["project"]
     gen = raw["data_generation"]
     mix = gen["product_line_mix"]
+    targets = raw["targets"]
+    thresholds = targets["severity_thresholds"]
     return Settings(
         project_name=str(project["name"]),
         random_seed=int(project["random_seed"]),
@@ -111,9 +126,17 @@ def _build_settings(raw: dict[str, Any]) -> Settings:
         paths=Paths(**{key: PROJECT_ROOT / value for key, value in raw["paths"].items()}),
         data_generation=DataGeneration(
             n_claims=int(gen["n_claims"]),
+            n_policies=int(gen["n_policies"]),
             start_date=_to_date(gen["start_date"]),
             end_date=_to_date(gen["end_date"]),
             product_line_mix={line: float(share) for line, share in mix.items()},
+        ),
+        targets=Targets(
+            severity_thresholds=SeverityThresholds(
+                medium=float(thresholds["medium"]),
+                high=float(thresholds["high"]),
+            ),
+            prolonged_settlement_days=int(targets["prolonged_settlement_days"]),
         ),
     )
 
@@ -122,6 +145,8 @@ def _validate(settings: Settings) -> None:
     gen = settings.data_generation
     if gen.n_claims <= 0:
         raise ConfigError(f"n_claims must be positive, got {gen.n_claims}")
+    if gen.n_policies <= 0:
+        raise ConfigError(f"n_policies must be positive, got {gen.n_policies}")
     if gen.start_date >= gen.end_date:
         raise ConfigError(f"start_date {gen.start_date} must be before end_date {gen.end_date}")
     if any(share < 0 for share in gen.product_line_mix.values()):
@@ -129,3 +154,15 @@ def _validate(settings: Settings) -> None:
     total = sum(gen.product_line_mix.values())
     if not math.isclose(total, 1.0, abs_tol=1e-6):
         raise ConfigError(f"product_line_mix must add up to 1.0, got {total}")
+
+    severity = settings.targets.severity_thresholds
+    if not 0 < severity.medium < severity.high:
+        raise ConfigError(
+            "severity_thresholds must satisfy 0 < medium < high, "
+            f"got medium={severity.medium}, high={severity.high}"
+        )
+    if settings.targets.prolonged_settlement_days <= 0:
+        raise ConfigError(
+            "prolonged_settlement_days must be positive, "
+            f"got {settings.targets.prolonged_settlement_days}"
+        )
