@@ -32,14 +32,14 @@ Predicting both early lets the insurer send complex claims to senior adjusters, 
 
 | # | Component | Responsibility | Status |
 |---|-----------|----------------|--------|
-| 0 | Project setup | Structure, environment, config, logging | 🚧 |
+| 0 | Project setup | Structure, environment, config, logging, CI | ✅ |
 | 1 | Data generation | Reproducible synthetic policies, claims, claimants, reserves, payments, loss history, adjuster notes | 📋 |
 | 2 | Source systems | Relational store (SQLite) and document store for adjuster notes | 📋 |
 | 3 | Integration | SQL joins and PySpark jobs into a governed, partitioned Parquet dataset with data-quality checks | 📋 |
 | 4 | Features | Cleaning, outlier handling, tabular features, NLTK + TF-IDF text indicators (injury, litigation, fraud, severity) | 📋 |
 | 5 | Modelling & evaluation | Logistic Regression, Decision Tree, Random Forest, Gradient Boosting for both targets. Precision, recall, F1, ROC-AUC, confusion matrices, cross-validation, per-product-line stability | 📋 |
 | 6 | Reporting | Matplotlib reports and a Streamlit dashboard: severity, reserve exposure, loss trends, high-risk segments | 📋 |
-| 7 | Automation | GitHub Actions CI (lint, tests, pipeline smoke test) and continuous deployment of the dashboard | 📋 |
+| 7 | Automation | CI (lint + tests on every PR, `main` protected) is live since Phase 0. Still to add: pipeline smoke test and continuous deployment of the dashboard | 🚧 |
 
 ## 3. Technology mapping
 
@@ -58,7 +58,7 @@ This project mirrors an enterprise claims-analytics stack using open, locally ru
 | Decision | Choice | Why |
 |----------|--------|-----|
 | Data | Synthetic, seeded (~50,000 claims, configurable) | No privacy risk. Fully reproducible |
-| CI/CD | GitHub Actions | Native to GitHub, no server to maintain, free for public repos |
+| CI/CD | GitHub Actions, set up in Phase 0 (`.github/workflows/ci.yml`) | Native to GitHub, no server to maintain, free for public repos. Every PR runs `ruff` + `pytest` with coverage on a clean Ubuntu / Python 3.11 machine. `main` only accepts green PRs. Least-privilege (read-only) token, outdated runs cancelled, 10-minute timeout |
 | Code layout | Logic in an installable `src/` package. Notebooks only for exploration | Testable, reusable, importable by the dashboard and CI |
 | Configuration | One YAML file (`config/settings.yaml`) loaded into frozen, typed dataclasses and validated at startup | No magic numbers in code. Bad settings fail fast with a clear error. `CLAIM_SEVERITY_CONFIG` lets CI swap in a small, fast config. `safe_load` only, so a config file can never run code |
 | Logging | Standard-library `logging`, configured once by entry points via `setup_logging()`. Modules only call `logging.getLogger(__name__)` | Timestamped, levelled, source-tagged messages. Logs go to stderr so they never corrupt real output on stdout. Optional log file. `CLAIM_SEVERITY_LOG_LEVEL` turns detail up or down without code changes. Independent of config, so it still works when config is broken |
@@ -67,6 +67,7 @@ This project mirrors an enterprise claims-analytics stack using open, locally ru
 
 ```
 insurance-claim-severity-prediction/
+├── .github/workflows/    # CI: lint + tests on every pull request
 ├── src/claim_severity/   # installable Python package: all real logic lives here
 ├── tests/                # pytest test suite
 ├── notebooks/            # exploration only; imports from src/
