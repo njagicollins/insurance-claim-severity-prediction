@@ -61,6 +61,7 @@ This project mirrors an enterprise claims-analytics stack using open, locally ru
 | CI/CD | GitHub Actions | Native to GitHub, no server to maintain, free for public repos |
 | Code layout | Logic in an installable `src/` package. Notebooks only for exploration | Testable, reusable, importable by the dashboard and CI |
 | Configuration | One YAML file (`config/settings.yaml`) loaded into frozen, typed dataclasses and validated at startup | No magic numbers in code. Bad settings fail fast with a clear error. `CLAIM_SEVERITY_CONFIG` lets CI swap in a small, fast config. `safe_load` only, so a config file can never run code |
+| Logging | Standard-library `logging`, configured once by entry points via `setup_logging()`. Modules only call `logging.getLogger(__name__)` | Timestamped, levelled, source-tagged messages. Logs go to stderr so they never corrupt real output on stdout. Optional log file. `CLAIM_SEVERITY_LOG_LEVEL` turns detail up or down without code changes. Independent of config, so it still works when config is broken |
 
 ## 5. Repository layout
 
