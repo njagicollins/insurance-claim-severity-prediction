@@ -16,11 +16,20 @@ paths:
 
 data_generation:
   n_claims: 50000
+  n_policies: 20000          # NEW: fewer policies than claims, so some policies claim more than once
   start_date: "2020-01-01"
-  end_date: "2025-12-31"
+  end_date: "2025-12-31"     # also the snapshot date: claims not closed by now are still open
   # Share of claims per product line (must add up to 1.0)
   product_line_mix:
     commercial_auto: 0.35
     general_liability: 0.25
     workers_compensation: 0.25
     commercial_property: 0.15
+
+# NEW: business definitions of what we predict (used by labelling, features and models)
+targets:
+  # Severity band by final claim cost in USD
+  severity_thresholds:
+    medium: 10000            # cost >= 10,000  → Medium (below → Low)
+    high: 100000             # cost >= 100,000 → High
+  prolonged_settlement_days: 365   # took longer than this to close → prolonged
